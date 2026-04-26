@@ -6,11 +6,10 @@ app = FastAPI()
 
 @app.get("/get-video")
 async def get_video(handle: str):
-    # You can get a free ms_token from your browser's cookies on TikTok.com
-    ms_token = "YOUR_MS_TOKEN_HERE" 
     try:
         async with TikTokApi() as api:
-            await api.create_sessions(ms_tokens=[ms_token], num_sessions=1, headless=True)
+            # We are not passing an ms_token, the library will try to generate one automatically
+            await api.create_sessions(num_sessions=1, headless=True)
             user = api.user(username=handle)
             user_data = await user.info()
             if not user_data:
