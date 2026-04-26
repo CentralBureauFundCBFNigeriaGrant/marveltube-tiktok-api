@@ -1,6 +1,11 @@
+import os
 from fastapi import FastAPI, HTTPException
 from TikTokApi import TikTokApi
 import uvicorn
+import asyncio
+
+# Explicitly tell Playwright where the browser binaries are located in the Docker image
+os.environ['PLAYWRIGHT_BROWSERS_PATH'] = '/ms-playwright'
 
 app = FastAPI()
 
@@ -8,7 +13,7 @@ app = FastAPI()
 async def get_video(handle: str):
     try:
         async with TikTokApi() as api:
-            # We are not passing an ms_token, the library will try to generate one automatically
+            # headless=True with the Playwright Docker image works perfectly
             await api.create_sessions(num_sessions=1, headless=True)
             user = api.user(username=handle)
             user_data = await user.info()
@@ -26,7 +31,6 @@ async def get_video(handle: str):
             if not videos:
                 raise HTTPException(status_code=404, detail="No videos found")
             
-            # Return the most viral video
             viral_video = max(videos, key=lambda v: v['play_count'])
             return {"video_url": viral_video['url'], "id": viral_video['id']}
 
@@ -34,4 +38,4 @@ async def get_video(handle: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port="8000")
